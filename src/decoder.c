@@ -6,28 +6,15 @@ typedef enum OP {
 
 typedef enum Register {
   // W = 0
-  AL = 0b0000,
-  CL = 0b0001,
-  DL = 0b0010,
-  BL = 0b0011,
-  AH = 0b0100,
-  CH = 0b0101,
-  DH = 0b0110,
-  BH = 0b0111,
-
+  AL, CL, DL, BL, AH, CH, DH, BH,
   // W = 1
-  AX = 0b1000,
-  CX = 0b1001,
-  DX = 0b1010,
-  BX = 0b1011,
-  SP = 0b1100,
-  BP = 0b1101,
-  SI = 0b1110,
-  DI = 0b1111,
+  AX, CX, DX, BX, SP, BP, SI, DI,
 } Register;
 
 static char* register_name[] = {
+  // W = 0
   "al", "cl", "dl", "bl", "ah", "ch", "dh", "bh",
+  // W = 1
   "ax", "cx", "dx", "bx", "sp", "bp", "si", "di",
 };
 
@@ -56,7 +43,7 @@ bool32 decode(str instruction_stream) {
   for (byte high_byte = read_byte(&decoder);
 	   decoder.position < decoder.end;
 	   high_byte = read_byte(&decoder)) {
-	OP op = high_byte >> 2; // >> 2 discards the two rightmost bytes
+	OP op = high_byte >> 2;
 
 	switch (op) {
 
