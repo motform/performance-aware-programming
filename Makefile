@@ -1,13 +1,21 @@
-OUT = 8086
+OUT = target
+BIN = 8086
+MAIN = src/8086.c
 
 FLAGS = -Wall -fno-exceptions -fno-rtti -Wno-deprecated-declarations -Wno-unused-function -Wno-unused-variable  -Wno-missing-braces -Wno-logical-not-parentheses -Wno-switch -Wno-write-strings -Wno-tautological-compare -Wno-missing-braces -Wno-null-dereference -Wno-writable-strings
 
-default: clean quick
+default: quick
 
 clean: 
-	rm -rf $(OUT) 
+	rm -rf $(OUT)/*
 
 build: 
-	clang 8086.c -o $(OUT) $(FLAGS)
+	clang $(MAIN) -o $(OUT)/$(BIN) $(FLAGS)
 
-quick: clean build
+debug:
+	clang $(MAIN) -g -o $(OUT)/$(BIN) $(FLAGS)
+
+run: 
+	./$(OUT)/$(BIN) $(p)
+
+quick: clean debug
