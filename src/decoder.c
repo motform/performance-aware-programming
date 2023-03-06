@@ -37,9 +37,9 @@ Register decode_register(byte W, byte reg) {
 bool32 decode(str instruction_stream) {
 	Decoder decoder = {
 		.instruction_stream = instruction_stream,
-			.position           = (byte*)instruction_stream.buffer,
-			.end                = (byte*)instruction_stream.buffer + instruction_stream.count,
-			};
+		.position           = (byte*)instruction_stream.buffer,
+		.end                = (byte*)instruction_stream.buffer + instruction_stream.count
+	};
 
 	printf("bits 16\n\n");
 
@@ -54,9 +54,9 @@ bool32 decode(str instruction_stream) {
 			byte W =  high_byte       & 0x1;
 
 			byte low_byte = read_byte(&decoder);
-			byte MOD = (low_byte >> 6) & 0x3;
+			byte MOD =  low_byte >> 6;
 			byte REG = (low_byte >> 3) & 0x7;
-			byte R_M = (low_byte >> 0) & 0x7;
+			byte R_M = low_byte        & 0x7;
 
 			Register target = decode_register(W, D ? REG : R_M);
 			Register source = decode_register(W, D ? R_M : REG);
@@ -83,6 +83,7 @@ bool32 decode(str instruction_stream) {
 					   register_name[target],
 					   address_register_equation[source & 0x7],
 					   displacement_equation);
+
 				if (allocated_string_buffer) free(displacement_equation);
 			} break;
 
@@ -97,9 +98,7 @@ bool32 decode(str instruction_stream) {
 			} break;
 
 			case 0b11: {
-				printf("MOV %s, %s\n",
-					   register_name[target],
-					   register_name[source]);
+				printf("MOV %s, %s\n", register_name[target], register_name[source]);
 			} break;
 
 			default: {
