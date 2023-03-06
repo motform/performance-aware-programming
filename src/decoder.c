@@ -9,6 +9,10 @@ typedef enum Register {
 	/* W = 1 */  AX, CX, DX, BX, SP, BP, SI, DI,
 } Register;
 
+typedef enum MemoryMode {
+	MEMORY_MODE, MEMORY_MODE_8, MEMORY_MODE_16, REGISTER_MODE
+} MemoryMode;
+
 static char* address_register_equation[] = {
 	"bx + si", "bx + di", "bp + si", "bp + di", 
 	"si",      "di",      "bp",      "bx"
@@ -54,22 +58,21 @@ bool32 decode(str instruction_stream) {
 			byte W =  high_byte       & 0x1;
 
 			byte low_byte = read_byte(&decoder);
-			byte MOD =  low_byte >> 6;
-			byte REG = (low_byte >> 3) & 0x7;
-			byte R_M = low_byte        & 0x7;
+			MemoryMode MOD = low_byte >> 6;
+			byte       REG = (low_byte >> 3) & 0x7;
+			byte       R_M = low_byte        & 0x7;
 
-			Register target = decode_register(W, D ? REG : R_M);
-			Register source = decode_register(W, D ? R_M : REG);
+			Register target = decode_register(W, REG);
+			Register source = decode_register(W, R_M);
 
 			switch (MOD) {
 
-			case 0b00: {
-				printf("MOV %s, [%s]\n",
-					   register_name[target],
-					   address_register_equation[source & 0x7]); // We don't want the extra byte set by W.
+			case MEMORY_MODE: {
+				if (D) printf("MOV %s, [%s]\n", register_name[target], address_register_equation[source & 0x7]);
+				else   printf("MOV [%s], %s\n", address_register_equation[source & 0x7], register_name[target]);
 			} break;
 
-			case 0b01: {
+			case MEMORY_MODE_8: {
 				byte displacement = read_byte(&decoder);
 				char* displacement_equation = "";
 				int allocated_string_buffer = 0;
@@ -79,26 +82,24 @@ bool32 decode(str instruction_stream) {
 					assert(allocated_string_buffer != -1);
 				}
 
-				printf("MOV %s, [%s%s]\n",
-					   register_name[target],
-					   address_register_equation[source & 0x7],
-					   displacement_equation);
+				if (D) printf("MOV %s, [%s%s]\n", register_name[target], address_register_equation[source & 0x7], displacement_equation);
+				else   printf("MOV [%s%s], %s\n", address_register_equation[source & 0x7], displacement_equation, register_name[target]);
 
 				if (allocated_string_buffer) free(displacement_equation);
 			} break;
 
-			case 0b10: {
+			case MEMORY_MODE_16: {
 				byte displacement_low  = read_byte(&decoder);
 				byte displacement_high = read_byte(&decoder);
 				uint16 displacement = (displacement_high << 8) | displacement_low;
-				printf("MOV %s, [%s + %i]\n",
-					   register_name[target],
-					   address_register_equation[source & 0x7],
-					   displacement);
+
+				if (D) printf("MOV %s, [%s + %i]\n", register_name[target], address_register_equation[source & 0x7], displacement);
+				else   printf("MOV [%s + %i], %s\n", address_register_equation[source & 0x7], displacement, register_name[target]);
 			} break;
 
-			case 0b11: {
-				printf("MOV %s, %s\n", register_name[target], register_name[source]);
+			case REGISTER_MODE: {
+				if (D) printf("MOV %s, %s\n", register_name[target], register_name[source]);
+				else   printf("MOV %s, %s\n", register_name[source], register_name[target]);
 			} break;
 
 			default: {
